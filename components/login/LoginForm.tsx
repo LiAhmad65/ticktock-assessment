@@ -1,18 +1,60 @@
 "use client";
 
 import { useState } from "react";
-import AppInput from "@/components/AppInput";
-import AppButton from "@/components/AppButton";
+import { useRouter } from "next/navigation";
+import AppInput from "@/components/AppInput/AppInput";
+import AppButton from "@/components/AppButton/AppButton";
 
-export default function LoginForm() {
+const LoginForm = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
+
+    if (!email.trim()) {
+      newErrors.email = "This field is required";
+    }
+
+    if (!password.trim()) {
+      newErrors.password = "This field is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     // TODO: Implement login logic
     console.log("Login attempt:", { email, password, rememberMe });
+    
+    // Navigate to timesheets page after successful login
+    router.push("/timesheets");
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    // Clear error when user starts typing
+    if (errors.email) {
+      setErrors({ ...errors, email: undefined });
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    // Clear error when user starts typing
+    if (errors.password) {
+      setErrors({ ...errors, password: undefined });
+    }
   };
 
   return (
@@ -28,8 +70,8 @@ export default function LoginForm() {
             placeholder="name@example.com"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            onChange={handleEmailChange}
+            error={errors.email}
           />
 
           <AppInput
@@ -37,8 +79,8 @@ export default function LoginForm() {
             placeholder="Enter your password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            onChange={handlePasswordChange}
+            error={errors.password}
           />
 
           <div className="flex items-center">
@@ -64,4 +106,6 @@ export default function LoginForm() {
       </div>
     </div>
   );
-}
+};
+
+export default LoginForm;

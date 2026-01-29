@@ -1,4 +1,4 @@
-export default function AppIntro() {
+const AppIntro = () => {
   return (
     <div className="bg-primary-600 w-full h-full flex items-center justify-center p-8">
       <div className="w-full max-w-md">
@@ -11,4 +11,6 @@ export default function AppIntro() {
       </div>
     </div>
   );
-}
+};
+
+export default AppIntro;

@@ -6,14 +6,14 @@ interface AppButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
-export default function AppButton({
+const AppButton = ({
   children,
   variant = "primary",
   isLoading = false,
   className = "",
   disabled,
   ...props
-}: AppButtonProps) {
+}: AppButtonProps) => {
   const baseStyles =
     "w-full inline-flex justify-center items-center px-4 py-3 rounded-lg font-medium leading-[150%] tracking-normal transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
@@ -54,4 +54,6 @@ export default function AppButton({
       )}
     </button>
   );
-}
+};
+
+export default AppButton;

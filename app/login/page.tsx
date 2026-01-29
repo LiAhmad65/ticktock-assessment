@@ -1,7 +1,7 @@
 import LoginForm from "@/components/login/LoginForm";
 import AppIntro from "@/components/login/AppIntro";
 
-export default function LoginPage() {
+const LoginPage = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 h-screen">
       <div>
@@ -12,4 +12,6 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
+};
+
+export default LoginPage;
