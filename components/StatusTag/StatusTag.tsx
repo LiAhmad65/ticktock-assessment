@@ -6,6 +6,12 @@ interface StatusTagProps {
 }
 
 const StatusTag = ({ status }: StatusTagProps) => {
+  const defaultConfig = {
+    bg: "bg-gray-100",
+    text: "text-gray-800",
+    label: "UNKNOWN",
+  };
+
   const statusConfig: Record<Status.COMPLETED | Status.INCOMPLETE | Status.MISSING, { bg: string; text: string; label: string }> = {
     [Status.COMPLETED]: {
       bg: "bg-green-100",
@@ -24,7 +30,7 @@ const StatusTag = ({ status }: StatusTagProps) => {
     },
   };
 
-  const config = statusConfig[status as Status.COMPLETED | Status.INCOMPLETE | Status.MISSING];
+  const config = statusConfig[status as Status.COMPLETED | Status.INCOMPLETE | Status.MISSING] || defaultConfig;
 
   return (
     <span

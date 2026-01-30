@@ -11,6 +11,7 @@ module.exports = {
         "primary-600": "#1C64F2",
         "primary-700": "#1A56DB",
         "white": "#FFFFFF",
+        "gray-50":"#F9FAFB",
         "gray-200":"#E5E7EB",
         "gray-300":"#D1D5DB",
         "gray-500":"#6B7280",
@@ -21,6 +22,7 @@ module.exports = {
         "yellow-800": "#92400E",
         "pink-100": "#FCE8F3",
         "pink-800": "#99154B",
+        "text-brand":"#1447E6"
       },
       screens: {
         'sm': '640px',

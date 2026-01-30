@@ -3,19 +3,26 @@
 import React, { useState } from "react";
 import AppDropdown from "@/components/AppDropdown/AppDropdown";
 import StatusTag from "@/components/StatusTag/StatusTag";
-import { Status, statusOptions } from "@/utils/constants";
+import { Status, statusOptions, DropdownOption } from "@/utils/constants";
+import { dateRangeOptions, timesheetColumns, timesheetData } from "@/utils/staticData";
+import Table from "@/components/timesheets/Table/Table";
+import Pagination from "@/components/timesheets/Pagination";
+
+const perPageOptions: DropdownOption[] = [
+  { label: "5 per page", value: 5 },
+  { label: "10 per page", value: 10 },
+  { label: "20 per page", value: 20 },
+  { label: "50 per page", value: 50 },
+];
 
 const TimesheetsTable = () => {
   const [dateRange, setDateRange] = useState<string | number>("");
   const [status, setStatus] = useState<string | number>("");
-
-  const dateRangeOptions = [
-    { label: "Last 7 days", value: "7" },
-    { label: "Last 30 days", value: "30" },
-    { label: "Last 90 days", value: "90" },
-    { label: "This month", value: "this_month" },
-    { label: "Last month", value: "last_month" },
-  ];
+  const [itemsPerPage, setItemsPerPage] = useState<number>(5);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  
+  // Calculate total pages based on data length
+  const totalPages = Math.ceil(timesheetData.length / itemsPerPage);
 
   const renderStatusOption = (option: { label: string; value: string | number }) => {
     if (option.value === Status.ALL) {
@@ -49,6 +56,31 @@ const TimesheetsTable = () => {
           renderOption={renderStatusOption}
           renderSelected={renderSelectedStatus}
         />
+      </div>
+
+      <Table
+        columns={timesheetColumns}
+        data={timesheetData}
+      />
+      <div className='w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-6'>
+        <div className="w-full sm:w-[152px]">
+          <AppDropdown
+            data={perPageOptions}
+            defaultValue={itemsPerPage}
+            onChange={(value) => {
+              setItemsPerPage(value as number);
+              setCurrentPage(1); // Reset to first page when changing items per page
+            }}
+            placeholder="Per page"
+          />
+        </div>
+        <div className="w-full sm:w-auto overflow-x-auto">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       </div>
     </div>
   );
