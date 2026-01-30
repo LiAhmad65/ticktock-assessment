@@ -13,8 +13,17 @@ const AuthenticatedLayout = ({
   
   // Map pathnames to page titles
   const getPageTitle = (path: string): string => {
+    // Check if path is the timesheets list page
+    if (path === "/timesheets") {
+      return "Timesheets";
+    }
+    
+    // Check if path is a week details page (e.g., /timesheets/week-1)
+    if (path.startsWith("/timesheets/")) {
+      return "Timesheets";
+    }
+    
     const titleMap: Record<string, string> = {
-      "/timesheets": "Timesheets",
       "/week-time-sheet": "Week Timesheet",
       // Add more routes here as needed
     };
