@@ -13,6 +13,7 @@ interface TableColumn {
 
 interface TableRow {
   [key: string]: React.ReactNode | string;
+  id?: string;
 }
 
 interface TableProps {
@@ -23,11 +24,15 @@ interface TableProps {
 const Table = ({ columns, data }: TableProps) => {
   const router = useRouter();
 
-  const handleActionClick = (action: string | React.ReactNode) => {
-    if (action === "View") {
-      router.push("/week-time-sheet");
+  const handleActionClick = (action: string | React.ReactNode, rowId?: string) => {
+    if (!rowId) {
+      console.error("No week ID provided");
+      return;
+    }
+
+    if (action === "View" || action === "Update" || action === "Create") {
+      router.push(`/timesheets/${rowId}`);
     } else {
-      // Handle other actions (Update, Create) if needed
       console.log("Action clicked:", action);
     }
   };
@@ -81,7 +86,7 @@ const Table = ({ columns, data }: TableProps) => {
           <tbody>
             {data.map((row, rowIndex) => (
               <tr
-                key={rowIndex}
+                key={row.id || rowIndex}
                 className="h-[54px] border-b border-gray-200 last:border-b-0"
               >
                 {columns.map((column) => (
@@ -99,7 +104,7 @@ const Table = ({ columns, data }: TableProps) => {
                       {column.accessor === "actions" ? (
                         <span
                           className="text-primary-700 text-sm cursor-pointer hover:underline"
-                          onClick={() => handleActionClick(row[column.accessor])}
+                          onClick={() => handleActionClick(row[column.accessor], row.id)}
                         >
                           {row[column.accessor] as string}
                         </span>

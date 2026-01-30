@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 interface NavbarProps {
   pageTitle: string;
@@ -39,8 +40,15 @@ const Navbar = ({ pageTitle, userName }: NavbarProps) => {
     };
   }, [isMobileMenuOpen, isUserDropdownOpen]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await signOut({ redirect: false });
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still navigate to login page even if signOut fails
     router.push("/login");
+    }
   };
 
   return (

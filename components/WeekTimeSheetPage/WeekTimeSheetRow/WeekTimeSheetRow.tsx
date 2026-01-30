@@ -8,16 +8,23 @@ interface Task {
   name: string;
   hours: number;
   projectName: string;
+  projectId?: string;
+  description?: string;
+  taskName?: string;
+  date?: string;
 }
 
 interface WeekTimeSheetRowProps {
-  date: string;
+  date: string; // ISO date format (YYYY-MM-DD)
+  displayDate?: string; // Display format (e.g., "Jan 19")
   tasks?: Task[];
+  onEntryAdded?: () => void; // Callback to refresh data after entry is added
 }
 
-const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
+const WeekTimeSheetRow = ({ date, displayDate, tasks = [], onEntryAdded }: WeekTimeSheetRowProps) => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Close menu when clicking outside
@@ -45,9 +52,12 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
   };
 
   const handleEdit = (taskId: string) => {
-    console.log("Edit task:", taskId);
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      setEditingTask(task);
+      setIsModalOpen(true);
+    }
     setOpenMenuId(null);
-    // Add edit logic here
   };
 
   const handleDelete = (taskId: string) => {
@@ -63,14 +73,19 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
     hours: number;
   }) => {
     console.log("Add task:", data);
-    // Add task logic here
+    // Refresh data after entry is added
+    if (onEntryAdded) {
+      onEntryAdded();
+    }
   };
 
   const handleOpenModal = () => {
+    setEditingTask(null);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    setEditingTask(null);
     setIsModalOpen(false);
   };
 
@@ -96,7 +111,7 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
     <div className="w-full grid grid-cols-1 sm:grid-cols-[108px_1fr] gap-4 sm:gap-[20px]">
       {/* Left side - Date */}
       <div className="flex items-start">
-        <span className="text-gray-900 font-bold text-base sm:text-lg">{date}</span>
+        <span className="text-gray-900 font-bold text-base sm:text-lg">{displayDate || date}</span>
       </div>
 
       {/* Right side - Task rows */}
@@ -189,6 +204,8 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onAdd={handleAddTask}
+        date={date}
+        editData={editingTask}
       />
     </div>
   );

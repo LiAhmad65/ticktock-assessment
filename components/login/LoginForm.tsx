@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AppInput from "@/components/AppInput/AppInput";
 import AppButton from "@/components/AppButton/AppButton";
+import { signIn } from "next-auth/react";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -11,6 +12,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -34,11 +36,34 @@ const LoginForm = () => {
       return;
     }
 
-    // TODO: Implement login logic
-    console.log("Login attempt:", { email, password, rememberMe });
-    
-    // Navigate to timesheets page after successful login
-    router.push("/timesheets");
+    setIsLoading(true);
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      
+      if (res?.error) {
+        setErrors({
+          email: "Invalid email or password",
+          password: "Invalid email or password",
+        });
+        return;
+      }
+      
+      // Navigate to timesheets page after successful login
+      if (res?.ok) {
+        router.push("/timesheets");
+      }
+    } catch (error) {
+      setErrors({
+        email: "An error occurred. Please try again.",
+        password: "An error occurred. Please try again.",
+      });
+    } finally{
+      setIsLoading(false);
+    }
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,7 +124,7 @@ const LoginForm = () => {
             </label>
           </div>
 
-          <AppButton type="submit">
+          <AppButton type="submit" isLoading={isLoading}>
             Sign in
           </AppButton>
         </form>

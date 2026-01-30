@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AppDropdown from "@/components/AppDropdown/AppDropdown";
 import StatusTag from "@/components/StatusTag/StatusTag";
 import { Status, statusOptions, DropdownOption } from "@/utils/constants";
-import { dateRangeOptions, timesheetColumns, timesheetData } from "@/utils/staticData";
+import { dateRangeOptions, timesheetColumns } from "@/utils/staticData";
 import Table from "@/components/timesheets/Table/Table";
 import Pagination from "@/components/timesheets/Pagination/Pagination";
+import api from "@/services/api";
+import { endpoints } from "@/services/endpoints";
+import { WeekTimesheet } from "@/types/timesheet";
 
 const perPageOptions: DropdownOption[] = [
   { label: "5 per page", value: 5 },
@@ -15,18 +18,115 @@ const perPageOptions: DropdownOption[] = [
   { label: "50 per page", value: 50 },
 ];
 
+// Helper function to format date range
+function formatDateRange(startDate: string, endDate: string): string {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  const startDay = start.getDate();
+  const startMonth = start.toLocaleString('default', { month: 'long' });
+  const startYear = start.getFullYear();
+  
+  const endDay = end.getDate();
+  const endMonth = end.toLocaleString('default', { month: 'long' });
+  const endYear = end.getFullYear();
+  
+  if (startMonth === endMonth && startYear === endYear) {
+    return `${startDay} - ${endDay} ${startMonth}, ${startYear}`;
+  } else if (startYear === endYear) {
+    return `${startDay} ${startMonth} - ${endDay} ${endMonth}, ${startYear}`;
+  } else {
+    return `${startDay} ${startMonth}, ${startYear} - ${endDay} ${endMonth}, ${endYear}`;
+  }
+}
+
+// Transform API data to table format
+function transformToTableData(weeks: WeekTimesheet[]) {
+  return weeks.map((week) => {
+    // Determine action based on status
+    let action = "View";
+    if (week.status === Status.MISSING) {
+      action = "Create";
+    } else if (week.status === Status.INCOMPLETE) {
+      action = "Update";
+    }
+    
+    return {
+      id: week.id,
+      week: week.weekNumber.toString(),
+      date: formatDateRange(week.weekStartDate, week.weekEndDate),
+      status: week.status,
+      actions: action,
+    };
+  });
+}
+
 const TimesheetsTable = () => {
   const [dateRange, setDateRange] = useState<string | number>("");
   const [status, setStatus] = useState<string | number>("");
   const [itemsPerPage, setItemsPerPage] = useState<number>(5);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState<number>(1);
   
-  // Calculate total pages based on data length
-  const totalPages = Math.ceil(timesheetData.length / itemsPerPage);
+  // Fetch timesheets from API
+  const fetchTimesheets = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const params: Record<string, string | number> = {
+        page: currentPage,
+        limit: itemsPerPage,
+      };
+      
+      if (dateRange) {
+        params.dateRange = dateRange;
+      }
+      
+      if (status && status !== Status.ALL) {
+        params.status = status;
+      }
+      
+      const response = await api.get<{
+        timesheets: WeekTimesheet[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      }>(endpoints.timesheets.list, params);
+      
+      if (response.error) {
+        setError(response.error);
+        setTableData([]);
+      } else if (response.data) {
+        const { timesheets, totalPages: pages } = response.data;
+        const transformedData = transformToTableData(timesheets);
+        setTableData(transformedData);
+        setTotalPages(pages);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch timesheets");
+      setTableData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dateRange, status, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    fetchTimesheets();
+  }, [fetchTimesheets]);
+  
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [dateRange, status]);
 
   const renderStatusOption = (option: { label: string; value: string | number }) => {
     if (option.value === Status.ALL) {
-      return option.label;
+      return <span className="text-gray-900">{option.label}</span>;
     }
     return <StatusTag status={option.value as Status} />;
   };
@@ -40,8 +140,8 @@ const TimesheetsTable = () => {
 
   return (
     <div className="w-full p-4 md:p-6 bg-white rounded-lg shadow-sm mb-4">
-      <span className='text-gray-900 font-bold text-xl md:text-2xl'>Your Timesheets</span>
-      <div className='w-full py-6 grid grid-cols-1 sm:grid-cols-[152px_152px] gap-[10px]'>
+      <h1 className='text-gray-900 font-bold text-xl md:text-2xl mb-6'>Your Timesheets</h1>
+      <div className='w-full grid grid-cols-1 sm:grid-cols-[152px_152px] gap-[10px] mb-6'>
         <AppDropdown
           data={dateRangeOptions}
           defaultValue={dateRange}
@@ -58,10 +158,24 @@ const TimesheetsTable = () => {
         />
       </div>
 
-      <Table
-        columns={timesheetColumns}
-        data={timesheetData}
-      />
+      {isLoading ? (
+        <div className="w-full py-12 flex items-center justify-center">
+          <div className="text-gray-500">Loading timesheets...</div>
+        </div>
+      ) : error ? (
+        <div className="w-full py-12 flex items-center justify-center">
+          <div className="text-red-500">Error: {error}</div>
+        </div>
+      ) : tableData.length === 0 ? (
+        <div className="w-full py-12 flex items-center justify-center">
+          <div className="text-gray-500">No timesheets found</div>
+        </div>
+      ) : (
+        <Table
+          columns={timesheetColumns}
+          data={tableData}
+        />
+      )}
       <div className='w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-6'>
         <div className="w-full sm:w-[152px]">
           <AppDropdown

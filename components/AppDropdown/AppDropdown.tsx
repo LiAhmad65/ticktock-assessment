@@ -26,6 +26,16 @@ const AppDropdown = ({
   const [selectedValue, setSelectedValue] = useState<string | number | undefined>(defaultValue);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sync selectedValue with defaultValue when it changes
+  useEffect(() => {
+    if (defaultValue !== undefined) {
+      setSelectedValue(defaultValue);
+    } else if (defaultValue === undefined && selectedValue !== undefined) {
+      // Reset when defaultValue is cleared
+      setSelectedValue(undefined);
+    }
+  }, [defaultValue]);
+
   // Find the selected option's label
   const selectedOption = data.find((item) => item.value === selectedValue);
   const displayText = selectedOption ? selectedOption.label : placeholder;
@@ -64,7 +74,9 @@ const AppDropdown = ({
         role="button"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        className="w-full px-4 py-3 rounded-[8px] border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:border-primary-700 transition-colors flex items-center justify-between cursor-pointer"
+        className={`w-full px-4 py-3 rounded-[8px] border bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 transition-colors flex items-center justify-between cursor-pointer ${
+          isOpen ? "border-primary-700" : "border-gray-300"
+        }`}
       >
         {renderSelected ? (
           renderSelected(selectedOption)
@@ -92,7 +104,7 @@ const AppDropdown = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-[8px] shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-[8px] shadow-lg max-h-60 overflow-auto">
           {data.map((item) => (
             <div
               key={item.value}
@@ -106,8 +118,8 @@ const AppDropdown = ({
               tabIndex={0}
               role="option"
               aria-selected={selectedValue === item.value}
-              className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors cursor-pointer flex items-center ${
-                selectedValue === item.value ? "bg-gray-50 text-primary-700" : "text-gray-900"
+              className={`w-full px-4 py-3 text-left text-sm text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer flex items-center ${
+                selectedValue === item.value ? "bg-gray-50" : ""
               }`}
             >
               {renderOption ? renderOption(item) : item.label}
