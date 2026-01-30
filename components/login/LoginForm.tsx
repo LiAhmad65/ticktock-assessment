@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AppInput from "@/components/AppInput/AppInput";
 import AppButton from "@/components/AppButton/AppButton";
 import { signIn } from "next-auth/react";
+import toast from "react-hot-toast";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -45,22 +46,27 @@ const LoginForm = () => {
       });
       
       if (res?.error) {
+        const errorMessage = "Invalid email or password";
         setErrors({
-          email: "Invalid email or password",
-          password: "Invalid email or password",
+          email: errorMessage,
+          password: errorMessage,
         });
+        toast.error(errorMessage);
         return;
       }
       
       // Navigate to timesheets page after successful login
       if (res?.ok) {
+        toast.success("Login successful!");
         router.push("/timesheets");
       }
     } catch (error) {
+      const errorMessage = "An error occurred. Please try again.";
       setErrors({
-        email: "An error occurred. Please try again.",
-        password: "An error occurred. Please try again.",
+        email: errorMessage,
+        password: errorMessage,
       });
+      toast.error(errorMessage);
     } finally{
       setIsLoading(false);
     }

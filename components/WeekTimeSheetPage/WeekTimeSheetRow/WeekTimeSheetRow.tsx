@@ -2,6 +2,10 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import AddNewTaskModal from "@/components/AddNewTaskModal/AddNewTaskModal";
+import ConfirmationDialog from "@/components/ConfirmationDialog/ConfirmationDialog";
+import api from "@/services/api";
+import { endpoints } from "@/services/endpoints";
+import toast from "react-hot-toast";
 
 interface Task {
   id: string;
@@ -25,6 +29,9 @@ const WeekTimeSheetRow = ({ date, displayDate, tasks = [], onEntryAdded }: WeekT
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [taskIdToDelete, setTaskIdToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Close menu when clicking outside
@@ -60,10 +67,44 @@ const WeekTimeSheetRow = ({ date, displayDate, tasks = [], onEntryAdded }: WeekT
     setOpenMenuId(null);
   };
 
-  const handleDelete = (taskId: string) => {
-    console.log("Delete task:", taskId);
+  const handleDeleteClick = (taskId: string) => {
     setOpenMenuId(null);
-    // Add delete logic here
+    setTaskIdToDelete(taskId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!taskIdToDelete) return;
+
+    setIsDeleting(true);
+
+    try {
+      const response = await api.delete(endpoints.timeEntries.delete(taskIdToDelete));
+
+      if (response.error) {
+        const errorMessage = response.error || "Failed to delete time entry";
+        toast.error(errorMessage);
+      } else {
+        toast.success("Time entry deleted successfully");
+        // Refresh data after entry is deleted
+        if (onEntryAdded) {
+          onEntryAdded();
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete time entry";
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      // Close dialog after request completes (success or error)
+      setIsDeleteDialogOpen(false);
+      setTaskIdToDelete(null);
+    }
+  };
+
+  const handleDeleteDialogClose = () => {
+    setIsDeleteDialogOpen(false);
+    setTaskIdToDelete(null);
   };
 
   const handleAddTask = (data: {
@@ -97,7 +138,7 @@ const WeekTimeSheetRow = ({ date, displayDate, tasks = [], onEntryAdded }: WeekT
 
   const createDeleteHandler = (taskId: string) => {
     return () => {
-      handleDelete(taskId);
+      handleDeleteClick(taskId);
     };
   };
 
@@ -206,6 +247,18 @@ const WeekTimeSheetRow = ({ date, displayDate, tasks = [], onEntryAdded }: WeekT
         onAdd={handleAddTask}
         date={date}
         editData={editingTask}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={handleDeleteDialogClose}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Entry"
+        message="Are you sure you want to delete this entry? This action cannot be undone."
+        confirmText="OK"
+        cancelText="Cancel"
+        isLoading={isDeleting}
       />
     </div>
   );

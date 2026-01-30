@@ -7,6 +7,7 @@ import { DropdownOption } from "@/utils/constants";
 import api from "@/services/api";
 import { endpoints } from "@/services/endpoints";
 import { Project, CreateTimeEntryRequest, UpdateTimeEntryRequest } from "@/types/timesheet";
+import toast from "react-hot-toast";
 
 interface EditData {
   id: string;
@@ -94,8 +95,10 @@ const AddNewTaskModal = ({ isOpen, onClose, onAdd, date, editData }: AddNewTaskM
     try {
       const response = await api.get<Project[]>(endpoints.projects.list);
       if (response.error) {
-        console.error("Error fetching projects:", response.error);
+        const errorMessage = response.error || "Failed to fetch projects";
+        console.error("Error fetching projects:", errorMessage);
         setProjects([]);
+        toast.error(errorMessage);
       } else if (response.data) {
         const projectOptions: DropdownOption[] = response.data.map((proj) => ({
           label: proj.name,
@@ -104,8 +107,10 @@ const AddNewTaskModal = ({ isOpen, onClose, onAdd, date, editData }: AddNewTaskM
         setProjects(projectOptions);
       }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch projects";
       console.error("Failed to fetch projects:", err);
       setProjects([]);
+      toast.error(errorMessage);
     } finally {
       setIsLoadingProjects(false);
     }
@@ -120,10 +125,6 @@ const AddNewTaskModal = ({ isOpen, onClose, onAdd, date, editData }: AddNewTaskM
 
   // Pre-populate form when editing (after projects are loaded)
   useEffect(() => {
-    console.log('isOpen==>',isOpen)
-    console.log('editData==>',editData)
-    console.log('projects==>',projects)
-    console.log('isLoadingProjects==>',isLoadingProjects)
     
     // Wait for projects to load before populating form
     if (isOpen && !isLoadingProjects) {
@@ -226,9 +227,13 @@ const AddNewTaskModal = ({ isOpen, onClose, onAdd, date, editData }: AddNewTaskM
         const updateResponse = await api.put(endpoints.timeEntries.update(entryId), updateRequest);
 
         if (updateResponse.error) {
-          setErrors({ description: updateResponse.error });
+          const errorMessage = updateResponse.error || "Failed to update time entry";
+          setErrors({ description: errorMessage });
+          toast.error(errorMessage);
           return;
         }
+        
+        toast.success("Time entry updated successfully");
       } else {
         // Create new entry
         const request: CreateTimeEntryRequest = {
@@ -242,9 +247,13 @@ const AddNewTaskModal = ({ isOpen, onClose, onAdd, date, editData }: AddNewTaskM
         const createResponse = await api.post(endpoints.timeEntries.create, request);
 
         if (createResponse.error) {
-          setErrors({ description: createResponse.error });
+          const errorMessage = createResponse.error || "Failed to create time entry";
+          setErrors({ description: errorMessage });
+          toast.error(errorMessage);
           return;
         }
+        
+        toast.success("Time entry created successfully");
       }
 
       // Call the onAdd callback with the form data
@@ -264,9 +273,11 @@ const AddNewTaskModal = ({ isOpen, onClose, onAdd, date, editData }: AddNewTaskM
       setErrors({});
       onClose();
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create time entry";
       setErrors({
-        description: err instanceof Error ? err.message : "Failed to create time entry",
+        description: errorMessage,
       });
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

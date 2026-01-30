@@ -1,13 +1,14 @@
 /**
  * PUT /api/time-entries/[id]
- * Route handler for updating a time entry
+ * DELETE /api/time-entries/[id]
+ * Route handlers for updating and deleting a time entry
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/authOptions';
 import { UpdateTimeEntryRequest } from '@/types/timesheet';
-import { updateTimeEntry } from './timeEntryController';
+import { updateTimeEntry, deleteTimeEntry } from './timeEntryController';
 
 export async function PUT(
   request: NextRequest,
@@ -71,6 +72,66 @@ export async function PUT(
     });
   } catch (error) {
     console.error('Error updating time entry:', error);
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Authentication check
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - No session found' },
+        { status: 401 }
+      );
+    }
+
+    // Get user ID from session
+    const userId = (session.user as any)?.id || session.user?.email;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - No user ID in session' },
+        { status: 401 }
+      );
+    }
+
+    // Get entryId from route params
+    const { id: entryId } = await params;
+
+    if (!entryId) {
+      return NextResponse.json(
+        { error: 'Entry ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Delete time entry using controller
+    const deleted = await deleteTimeEntry(entryId, userId);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: 'Time entry not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      message: 'Time entry deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting time entry:', error);
     return NextResponse.json(
       {
         error: 'Internal server error',

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import AppDropdown from "@/components/AppDropdown/AppDropdown";
 import StatusTag from "@/components/StatusTag/StatusTag";
 import { Status, statusOptions, DropdownOption } from "@/utils/constants";
@@ -10,6 +10,7 @@ import Pagination from "@/components/timesheets/Pagination/Pagination";
 import api from "@/services/api";
 import { endpoints } from "@/services/endpoints";
 import { WeekTimesheet } from "@/types/timesheet";
+import toast from "react-hot-toast";
 
 const perPageOptions: DropdownOption[] = [
   { label: "5 per page", value: 5 },
@@ -55,6 +56,7 @@ function transformToTableData(weeks: WeekTimesheet[]) {
       id: week.id,
       week: week.weekNumber.toString(),
       date: formatDateRange(week.weekStartDate, week.weekEndDate),
+      dateValue: week.weekStartDate, // Store original date for sorting
       status: week.status,
       actions: action,
     };
@@ -70,6 +72,8 @@ const TimesheetsTable = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   // Fetch timesheets from API
   const fetchTimesheets = useCallback(async () => {
@@ -99,8 +103,10 @@ const TimesheetsTable = () => {
       }>(endpoints.timesheets.list, params);
       
       if (response.error) {
-        setError(response.error);
+        const errorMessage = response.error || "Failed to fetch timesheets";
+        setError(errorMessage);
         setTableData([]);
+        toast.error(errorMessage);
       } else if (response.data) {
         const { timesheets, totalPages: pages } = response.data;
         const transformedData = transformToTableData(timesheets);
@@ -108,8 +114,10 @@ const TimesheetsTable = () => {
         setTotalPages(pages);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch timesheets");
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch timesheets";
+      setError(errorMessage);
       setTableData([]);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +131,52 @@ const TimesheetsTable = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [dateRange, status]);
+
+  // Sort data locally
+  const sortedData = useMemo(() => {
+    if (!sortBy) return tableData;
+
+    return [...tableData].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case 'week':
+          comparison = parseInt(a.week) - parseInt(b.week);
+          break;
+        case 'date':
+          // Sort by the original date value stored in dateValue
+          const dateA = a.dateValue ? new Date(a.dateValue as string).getTime() : 0;
+          const dateB = b.dateValue ? new Date(b.dateValue as string).getTime() : 0;
+          comparison = dateA - dateB;
+          break;
+        case 'status':
+          // Sort by status priority: MISSING < INCOMPLETE < COMPLETED
+          const statusOrder: Record<string, number> = { 
+            [Status.MISSING]: 0, 
+            [Status.INCOMPLETE]: 1, 
+            [Status.COMPLETED]: 2 
+          };
+          comparison = (statusOrder[a.status as string] || 0) - 
+                       (statusOrder[b.status as string] || 0);
+          break;
+        default:
+          return 0;
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  }, [tableData, sortBy, sortOrder]);
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new sort column and default to ascending
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
 
   const renderStatusOption = (option: { label: string; value: string | number }) => {
     if (option.value === Status.ALL) {
@@ -173,7 +227,10 @@ const TimesheetsTable = () => {
       ) : (
         <Table
           columns={timesheetColumns}
-          data={tableData}
+          data={sortedData}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
         />
       )}
       <div className='w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-6'>

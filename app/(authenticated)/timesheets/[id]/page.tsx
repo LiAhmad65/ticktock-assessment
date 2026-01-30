@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import api from "@/services/api";
 import { endpoints } from "@/services/endpoints";
 import { WeekTimesheet } from "@/types/timesheet";
+import toast from "react-hot-toast";
 
 const WeekTimeSheetPage = () => {
   const params = useParams();
@@ -30,12 +31,16 @@ const WeekTimeSheetPage = () => {
       );
 
       if (response.error) {
-        setError(response.error);
+        const errorMessage = response.error || "Failed to fetch week data";
+        setError(errorMessage);
+        toast.error(errorMessage);
       } else if (response.data) {
         setWeekData(response.data);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch week data");
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch week data";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
       isFetchingRef.current = false;

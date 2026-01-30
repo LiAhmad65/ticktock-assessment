@@ -19,9 +19,12 @@ interface TableRow {
 interface TableProps {
   columns: TableColumn[];
   data: TableRow[];
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  onSort?: (column: string) => void;
 }
 
-const Table = ({ columns, data }: TableProps) => {
+const Table = ({ columns, data, sortBy, sortOrder, onSort }: TableProps) => {
   const router = useRouter();
 
   const handleActionClick = (action: string | React.ReactNode, rowId?: string) => {
@@ -35,6 +38,38 @@ const Table = ({ columns, data }: TableProps) => {
     } else {
       console.log("Action clicked:", action);
     }
+  };
+
+  const handleSortClick = (columnAccessor: string) => {
+    if (onSort) {
+      onSort(columnAccessor);
+    }
+  };
+
+  const getSortIcon = (columnAccessor: string) => {
+    const isActive = sortBy === columnAccessor;
+    const rotation = isActive && sortOrder === 'desc' ? 'rotate(180deg)' : 'rotate(0deg)';
+    const colorClass = isActive ? 'text-primary-700' : 'text-gray-500';
+    
+    return (
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 12 12"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={colorClass}
+        style={{ transform: rotation, transition: 'transform 0.2s ease' }}
+      >
+        <path
+          d="M3 4.5L6 1.5L9 4.5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   };
 
   return (
@@ -54,28 +89,10 @@ const Table = ({ columns, data }: TableProps) => {
                     <span>{column.header}</span>
                     {column.sortable && (
                       <button
-                        onClick={() => {
-                          // Sort handler will be added later
-                          console.log("Sort clicked:", column.accessor);
-                        }}
+                        onClick={() => handleSortClick(column.accessor)}
                         className="cursor-pointer hover:opacity-70 transition-opacity"
                       >
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 12 12"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="text-gray-500"
-                        >
-                          <path
-                            d="M3 4.5L6 1.5L9 4.5M3 7.5L6 10.5L9 7.5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                        {getSortIcon(column.accessor)}
                       </button>
                     )}
                   </div>
