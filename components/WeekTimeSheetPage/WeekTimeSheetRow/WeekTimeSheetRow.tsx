@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import AddNewTaskModal from "@/components/AddNewTaskModal/AddNewTaskModal";
 
 interface Task {
   id: string;
@@ -16,6 +17,7 @@ interface WeekTimeSheetRowProps {
 
 const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Close menu when clicking outside
@@ -54,6 +56,42 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
     // Add delete logic here
   };
 
+  const handleAddTask = (data: {
+    project: string | number;
+    typeOfWork: string | number;
+    description: string;
+    hours: number;
+  }) => {
+    console.log("Add task:", data);
+    // Add task logic here
+  };
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const createEditHandler = (taskId: string) => {
+    return () => {
+      handleEdit(taskId);
+    };
+  };
+
+  const createDeleteHandler = (taskId: string) => {
+    return () => {
+      handleDelete(taskId);
+    };
+  };
+
+  const createToggleMenuHandler = (taskId: string) => {
+    return () => {
+      toggleMenu(taskId);
+    };
+  };
+
   return (
     <div className="w-full grid grid-cols-1 sm:grid-cols-[108px_1fr] gap-4 sm:gap-[20px]">
       {/* Left side - Date */}
@@ -81,7 +119,7 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
               </div>
               <div className="relative" ref={(el) => { menuRefs.current[task.id] = el; }}>
                 <button
-                  onClick={() => toggleMenu(task.id)}
+                  onClick={createToggleMenuHandler(task.id)}
                   className="p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
                   aria-label="More options"
                 >
@@ -103,13 +141,13 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
                 {openMenuId === task.id && (
                   <div className="absolute right-0 top-8 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]">
                     <button
-                      onClick={() => handleEdit(task.id)}
+                      onClick={createEditHandler(task.id)}
                       className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 transition-colors"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(task.id)}
+                      onClick={createDeleteHandler(task.id)}
                       className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50 transition-colors"
                     >
                       Delete
@@ -122,7 +160,10 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
         ))}
 
         {/* Add new task button */}
-        <button className="w-full bg-white rounded-lg border-2 border-dashed border-gray-300 hover:border-primary-700 p-3 sm:p-4 flex items-center justify-center gap-2 text-gray-700 hover:text-primary-700 text-sm font-medium hover:bg-primary-100 transition-colors">
+        <button
+          onClick={handleOpenModal}
+          className="w-full bg-white rounded-lg border-2 border-dashed border-gray-300 hover:border-primary-700 p-3 sm:p-4 flex items-center justify-center gap-2 text-gray-700 hover:text-primary-700 text-sm font-medium hover:bg-primary-100 transition-colors"
+        >
           <svg
             width="16"
             height="16"
@@ -142,6 +183,13 @@ const WeekTimeSheetRow = ({ date, tasks = [] }: WeekTimeSheetRowProps) => {
           <span>Add new task</span>
         </button>
       </div>
+
+      {/* Add New Task Modal */}
+      <AddNewTaskModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onAdd={handleAddTask}
+      />
     </div>
   );
 };
