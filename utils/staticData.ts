@@ -66,3 +66,53 @@ export const timesheetData: TableRow[] = [
     actions: "Create",
   },
 ];
+
+export interface Task {
+  id: string;
+  name: string;
+  hours: number;
+  projectName: string;
+}
+
+export interface WeekTimeSheetData {
+  date: string;
+  tasks: Task[];
+}
+
+export const weekTimeSheetData: WeekTimeSheetData[] = [
+  {
+    date: "Jan 21",
+    tasks: [
+      { id: "1", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+      { id: "2", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+    ],
+  },
+  {
+    date: "Jan 22",
+    tasks: [
+      { id: "1", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+      { id: "2", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+    ],
+  },
+  {
+    date: "Jan 23",
+    tasks: [
+      { id: "1", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+      { id: "2", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+    ],
+  },
+  {
+    date: "Jan 24",
+    tasks: [
+      { id: "1", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+      { id: "2", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+    ],
+  },
+  {
+    date: "Jan 25",
+    tasks: [
+      { id: "1", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+      { id: "2", name: "Homepage Development", hours: 4, projectName: "Project Name" },
+    ],
+  },
+];

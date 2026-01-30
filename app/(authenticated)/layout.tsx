@@ -15,6 +15,7 @@ const AuthenticatedLayout = ({
   const getPageTitle = (path: string): string => {
     const titleMap: Record<string, string> = {
       "/timesheets": "Timesheets",
+      "/week-time-sheet": "Week Timesheet",
       // Add more routes here as needed
     };
     return titleMap[path] || "Dashboard";

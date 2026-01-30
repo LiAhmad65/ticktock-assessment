@@ -1,4 +1,4 @@
-import TimesheetsTable from "@/components/timesheets/TimesheetsTable";
+import TimesheetsTable from "@/components/timesheets/TimesheetsTable/TimesheetsTable";
 
 const TimesheetsPage = () => {
   return <TimesheetsTable />;

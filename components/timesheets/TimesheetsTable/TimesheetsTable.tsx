@@ -6,7 +6,7 @@ import StatusTag from "@/components/StatusTag/StatusTag";
 import { Status, statusOptions, DropdownOption } from "@/utils/constants";
 import { dateRangeOptions, timesheetColumns, timesheetData } from "@/utils/staticData";
 import Table from "@/components/timesheets/Table/Table";
-import Pagination from "@/components/timesheets/Pagination";
+import Pagination from "@/components/timesheets/Pagination/Pagination";
 
 const perPageOptions: DropdownOption[] = [
   { label: "5 per page", value: 5 },

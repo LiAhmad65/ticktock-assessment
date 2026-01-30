@@ -8,8 +8,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        "primary-100":"#E1EFFE",
         "primary-600": "#1C64F2",
         "primary-700": "#1A56DB",
+        "primary-800":"#1E429F",
         "white": "#FFFFFF",
         "gray-50":"#F9FAFB",
         "gray-200":"#E5E7EB",
@@ -22,7 +24,8 @@ module.exports = {
         "yellow-800": "#92400E",
         "pink-100": "#FCE8F3",
         "pink-800": "#99154B",
-        "text-brand":"#1447E6"
+        "text-brand":"#1447E6",
+        "orange-400":"#FF8A4C",
       },
       screens: {
         'sm': '640px',

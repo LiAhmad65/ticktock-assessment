@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { useRouter } from "next/navigation";
 import StatusTag from "@/components/StatusTag/StatusTag";
 import { Status } from "@/utils/constants";
 
@@ -18,6 +21,17 @@ interface TableProps {
 }
 
 const Table = ({ columns, data }: TableProps) => {
+  const router = useRouter();
+
+  const handleActionClick = (action: string | React.ReactNode) => {
+    if (action === "View") {
+      router.push("/week-time-sheet");
+    } else {
+      // Handle other actions (Update, Create) if needed
+      console.log("Action clicked:", action);
+    }
+  };
+
   return (
     <div className="rounded-lg shadow-md overflow-hidden">
       <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
@@ -84,11 +98,8 @@ const Table = ({ columns, data }: TableProps) => {
                     <div className="flex items-center h-full">
                       {column.accessor === "actions" ? (
                         <span
-                          className="text-primary-700 text-sm cursor-pointer"
-                          onClick={() => {
-                            // Action handler will be added later
-                            console.log("Action clicked:", row[column.accessor]);
-                          }}
+                          className="text-primary-700 text-sm cursor-pointer hover:underline"
+                          onClick={() => handleActionClick(row[column.accessor])}
                         >
                           {row[column.accessor] as string}
                         </span>
